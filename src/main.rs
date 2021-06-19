@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Write;
+use std::process::{Command, Stdio};
 
 const PROG_NAME: &str = "rustyshell";
 const PROG_VER: &str = "0.0.1";
@@ -12,10 +13,18 @@ fn execute_line(line: &str) {
     let command = tokens[0];
     println!("Command: {}", command);
 
+    let args: &[&str] = &tokens[1..];
     if tokens.len() > 1 {
-        let args: &[&str] = &tokens[1..];
         println!("Args: {}", args.join(", "));
     }
+
+    let output = Command::new(command)
+        .args(args)
+        .stdout(Stdio::piped())
+        .output()
+        .expect("Unable to execute command");
+
+    println!("Command output: {}", String::from_utf8_lossy(&output.stdout));
 }
 
 fn make_prompt() -> String {
