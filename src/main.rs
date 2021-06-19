@@ -1,6 +1,9 @@
 use std::io;
 use std::io::Write;
 
+const PROG_NAME: &str = "rustyshell";
+const PROG_VER: &str = "0.0.1";
+
 fn execute_line(line: &str) {
     let tokens: Vec<&str> = line.split_whitespace().collect();
     if tokens.len() == 0 {
@@ -15,15 +18,17 @@ fn execute_line(line: &str) {
     }
 }
 
-fn prompt() -> String {
-    return String::from("rustyshell::matt> ");
+fn make_prompt() -> String {
+    return PROG_NAME.to_owned() + "::> ";
 }
 
 fn main() {
-    println!("rustyshell, 0.1 (18/06/2021)");
+    println!("{}, v{}", PROG_NAME, PROG_VER);
+
+    let prompt = make_prompt();
 
     loop {
-        print!("{}", prompt());
+        print!("{}", prompt);
         io::stdout().flush().expect("Unable to flush stdout");
         let mut command_line = String::new();
         io::stdin().read_line(&mut command_line).expect("Unable to read from stdin");
