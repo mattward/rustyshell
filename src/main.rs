@@ -30,12 +30,16 @@ fn execute_builtin(command: &str, _args: &[&str], history: &Vec<String>) {
         let res: Result<usize, _> = command.split_at(1).1.parse();
         if res.is_ok() {
             let hist_idx: usize = res.unwrap() - 1;
-            print!("Execute '{}' [Y/n] ", history[hist_idx]);
-            io::stdout().flush().expect("Unable to flush stdout");
-            let mut answer = String::new();
-            io::stdin().read_line(&mut answer).expect("Unable to read from stdin");
-            if answer.trim().eq("") || answer.trim().eq("Y") || answer.trim().eq("y") {
-                execute_line(&history[hist_idx], &history);
+            if hist_idx >= history.len() {
+                eprintln!("No history entry #{}", hist_idx);
+            } else {
+                print!("Execute '{}' [Y/n] ", history[hist_idx]);
+                io::stdout().flush().expect("Unable to flush stdout");
+                let mut answer = String::new();
+                io::stdin().read_line(&mut answer).expect("Unable to read from stdin");
+                if answer.trim().eq("") || answer.trim().eq("Y") || answer.trim().eq("y") {
+                    execute_line(&history[hist_idx], &history);
+                }
             }
         }
         else {
