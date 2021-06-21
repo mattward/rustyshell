@@ -26,26 +26,6 @@ fn execute_builtin(command: &str, _args: &[&str], history: &Vec<String>) {
     if command.eq("history") {
         list_history(&history);
     }
-    else if command.starts_with("!") && command.len() > 1 {
-        let res: Result<usize, _> = command.split_at(1).1.parse();
-        if res.is_ok() {
-            let hist_idx: usize = res.unwrap() - 1;
-            if hist_idx >= history.len() {
-                eprintln!("No history entry #{}", hist_idx);
-            } else {
-                print!("Execute '{}' [Y/n] ", history[hist_idx]);
-                io::stdout().flush().expect("Unable to flush stdout");
-                let mut answer = String::new();
-                io::stdin().read_line(&mut answer).expect("Unable to read from stdin");
-                if answer.trim().eq("") || answer.trim().eq("Y") || answer.trim().eq("y") {
-                    execute_line(&history[hist_idx], &history);
-                }
-            }
-        }
-        else {
-            eprintln!("Expected a history item number, but got {}", res.err().unwrap())
-        }
-    }
 }
 
 fn execute_line(line: &str, history: &Vec<String>) {
@@ -76,19 +56,50 @@ fn list_history(history: &Vec<String>) {
     }
 }
 
-fn main() {
-    println!("** {}, v{} **", PROG_NAME, PROG_VER);
+fn next_command(prompt: &str, history: &Vec<String>) -> String {
+    print!("{}", prompt);
+    io::stdout().flush().expect("Unable to flush stdout");
+    let mut command_line = String::new();
+    io::stdin().read_line(&mut command_line).expect("Unable to read from stdin");
 
+    let mut command_line = command_line.trim().to_string();
+
+    if command_line.starts_with("!") && command_line.len() > 1 {
+        let res: Result<usize, _> = command_line.split_at(1).1.parse();
+        if res.is_ok() {
+            let hist_idx: usize = res.unwrap() - 1;
+            if hist_idx >= history.len() {
+                eprintln!("No history entry #{}", hist_idx + 1);
+                command_line.truncate(0);
+            } else {
+                print!("Execute '{}' [Y/n] ", history[hist_idx]);
+                io::stdout().flush().expect("Unable to flush stdout");
+                let mut answer = String::new();
+                io::stdin().read_line(&mut answer).expect("Unable to read from stdin");
+                if answer.trim().eq("") || answer.trim().eq("Y") || answer.trim().eq("y") {
+                    command_line.truncate(0);
+                    command_line.push_str(&history[hist_idx]);
+                }  else {
+                    command_line.truncate(0);
+                }
+            }
+        }
+        else {
+            eprintln!("Expected a history item number, but got {}", res.err().unwrap())
+        }
+    }
+
+    command_line
+}
+
+fn main() {
     let prompt = make_prompt();
     let mut history: Vec<String> = vec![];
 
-    loop {
-        print!("{}", prompt);
-        io::stdout().flush().expect("Unable to flush stdout");
-        let mut command_line = String::new();
-        io::stdin().read_line(&mut command_line).expect("Unable to read from stdin");
+    println!("** {}, v{} **", PROG_NAME, PROG_VER);
 
-        let command_line = command_line.trim().to_string();
+    loop {
+        let command_line = next_command(&prompt, &history);
 
         if command_line.eq("exit") {
             break;
@@ -96,6 +107,8 @@ fn main() {
             execute_line(&command_line, &history);
         }
 
-        history.push(command_line);
+        if !command_line.is_empty() {
+            history.push(String::from(command_line));
+        }
     }
 }
