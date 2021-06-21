@@ -6,21 +6,41 @@ const PROG_NAME: &str = "rustyshell";
 const PROG_VER: &str = "0.0.1";
 
 fn is_builtin(command: &str) -> bool {
-    command.eq("!!") || command.starts_with('*')
+    command.eq("history") || command.starts_with('!')
 }
 
 fn execute_command(command: &str, args: &[&str]) {
-    let mut child = Command::new(command)
+    let res = Command::new(command)
         .args(args)
-        .spawn()
-        .expect("Unable to start command");
+        .spawn();
 
-    child.wait().expect("Command failed");
+    if res.is_ok() {
+        let mut child = res.unwrap();
+        child.wait().expect("Command failed while shell waiting for it to finish");
+    } else {
+        eprintln!("Unable to start command: {}", command);
+    }
 }
 
-fn execute_builtin(command: &str, args: &[&str], history: &Vec<String>) {
-    if (command.eq("*.")) {
+fn execute_builtin(command: &str, _args: &[&str], history: &Vec<String>) {
+    if command.eq("history") {
         list_history(&history);
+    }
+    else if command.starts_with("!") && command.len() > 1 {
+        let res: Result<usize, _> = command.split_at(1).1.parse();
+        if res.is_ok() {
+            let hist_idx: usize = res.unwrap() - 1;
+            print!("Execute '{}' [Y/n] ", history[hist_idx]);
+            io::stdout().flush().expect("Unable to flush stdout");
+            let mut answer = String::new();
+            io::stdin().read_line(&mut answer).expect("Unable to read from stdin");
+            if answer.trim().eq("") || answer.trim().eq("Y") || answer.trim().eq("y") {
+                execute_line(&history[hist_idx], &history);
+            }
+        }
+        else {
+            eprintln!("Expected a history item number, but got {}", res.err().unwrap())
+        }
     }
 }
 
