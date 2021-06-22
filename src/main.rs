@@ -105,10 +105,9 @@ fn main() {
             break;
         } else {
             execute_line(&command_line, &history);
-        }
-
-        if !command_line.is_empty() {
-            history.push(String::from(command_line));
+            if !command_line.is_empty() {
+                history.push(String::from(command_line));
+            }
         }
     }
 }
