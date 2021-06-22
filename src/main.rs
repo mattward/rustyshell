@@ -1,12 +1,13 @@
 use std::io;
 use std::io::Write;
 use std::process::Command;
+use std::env::set_current_dir;
 
 const PROG_NAME: &str = "rustyshell";
 const PROG_VER: &str = "0.0.1";
 
 fn is_builtin(command: &str) -> bool {
-    command.eq("history") || command.starts_with('!')
+    command.eq("history") || command.eq("cd") || command.starts_with('!')
 }
 
 fn execute_command(command: &str, args: &[&str]) {
@@ -22,9 +23,11 @@ fn execute_command(command: &str, args: &[&str]) {
     }
 }
 
-fn execute_builtin(command: &str, _args: &[&str], history: &Vec<String>) {
-    if command.eq("history") {
-        list_history(&history);
+fn execute_builtin(command: &str, args: &[&str], history: &Vec<String>) {
+    match command {
+        "history" => list_history(&history),
+        "cd" => change_working_dir(&args),
+        _ => println!("Unknown command!")
     }
 }
 
@@ -53,6 +56,17 @@ fn list_history(history: &Vec<String>) {
     for line in history.iter() {
         println!("{}. {}", i, line);
         i += 1;
+    }
+}
+
+fn change_working_dir(args: &[&str]) {
+    if args.len() != 1 {
+        eprintln!("cd requires exactly one argument: the directory required")
+    } else {
+        match set_current_dir(args[0]) {
+            Ok(_) => (),
+            Err(_) => eprintln!("Couldn't change directory!")
+        }
     }
 }
 
