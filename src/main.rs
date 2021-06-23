@@ -1,14 +1,13 @@
+mod builtins;
+
 use std::io;
 use std::io::Write;
 use std::process::Command;
-use std::env::set_current_dir;
+
 
 const PROG_NAME: &str = "rustyshell";
 const PROG_VER: &str = "0.0.1";
 
-fn is_builtin(command: &str) -> bool {
-    command.eq("history") || command.eq("cd") || command.starts_with('!')
-}
 
 fn execute_command(command: &str, args: &[&str]) {
     let res = Command::new(command)
@@ -23,14 +22,6 @@ fn execute_command(command: &str, args: &[&str]) {
     }
 }
 
-fn execute_builtin(command: &str, args: &[&str], history: &Vec<String>) {
-    match command {
-        "history" => list_history(&history),
-        "cd" => change_working_dir(&args),
-        _ => println!("Unknown command!")
-    }
-}
-
 fn execute_line(line: &str, history: &Vec<String>) {
     let tokens: Vec<&str> = line.split_whitespace().collect();
     if tokens.len() == 0 {
@@ -40,8 +31,8 @@ fn execute_line(line: &str, history: &Vec<String>) {
     let command = tokens[0];
     let args: &[&str] = &tokens[1..];
 
-    if is_builtin(&command) {
-        execute_builtin(&command, args, &history);
+    if builtins::is_builtin(&command) {
+        builtins::execute_builtin(&command, args, &history);
     } else {
         execute_command(&command, args);
     }
@@ -49,25 +40,6 @@ fn execute_line(line: &str, history: &Vec<String>) {
 
 fn make_prompt() -> String {
     PROG_NAME.to_owned() + "::> "
-}
-
-fn list_history(history: &Vec<String>) {
-    let mut i = 1;
-    for line in history.iter() {
-        println!("{}. {}", i, line);
-        i += 1;
-    }
-}
-
-fn change_working_dir(args: &[&str]) {
-    if args.len() != 1 {
-        eprintln!("cd requires exactly one argument: the directory required")
-    } else {
-        match set_current_dir(args[0]) {
-            Ok(_) => (),
-            Err(_) => eprintln!("Couldn't change directory!")
-        }
-    }
 }
 
 fn next_command(prompt: &str, history: &Vec<String>) -> String {
