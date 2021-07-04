@@ -1,0 +1,33 @@
+= Rustyshell
+
+This is a small project for me to play with to help me learn some Rust.
+
+It probably would have been better to call the shell `rush` (RUsty SHell) --
+perhaps I'll change it later!
+
+The shell supports a couple of features only:
+
+* Run commands
+* List history... with the, unimaginatively named `history` built-in
+* Re-execute a command from your history with `!n` -- where `n` is the index shown in the output of `history`
+* Change working directory with the `cd` built-in
+
+Here's some sample output:
+
+[source, bash]
+** rustyshell, v0.0.1 **
+rustyshell::> ls
+Cargo.lock	Cargo.toml	src		target
+rustyshell::> pwd
+/Users/matt/dev/rust/rustyshell
+rustyshell::> whoami
+matt
+rustyshell::> history
+1. ls
+2. pwd
+3. whoami
+rustyshell::> !1
+Execute 'ls' [Y/n]
+Cargo.lock	Cargo.toml	src		target
+rustyshell::> exit
+matt@Mac-mini rustyshell %
